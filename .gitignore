@@ -1,0 +1,10 @@
+#Chỉ định folder hoặc file muốn git lờ đi
+#Vậy nên lờ gì ? Đó là những thứ cá nhân không cần thiết vs mọi người cùng project. Vd:
+#	node_module
+#	.env
+#	.log or .o
+#	file do máy hoặc framework tự sinh ra
+
+
+node_modules/
+.env
