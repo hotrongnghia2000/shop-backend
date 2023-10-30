@@ -1,8 +1,8 @@
-// khi muốn tạo ra err, ta dùng throw new Error('err message')
-// tạo class MyError kế thừa Error
-// constructor sẽ tự động tạo ra Object chứa các thuộc tính của class khi tạo instance của class
-// super() là lấy toàn bộ thuộc tính của parent class
-// super(message) là lấy 1 thuộc tính tên message của parent class
+// when we want to create an err, we use throw new Error('err message')
+// create class MyError that inherits Error
+// constructor will automatically create an Object containing class properties when creating an instance of the class
+// super() is to get all the properties of the parent class
+// super(message) is to get an attribute named message of the parent class
 class MyError extends Error {
   constructor(message, httpCode) {
     super(message);

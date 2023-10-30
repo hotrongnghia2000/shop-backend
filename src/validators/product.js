@@ -10,7 +10,7 @@ exports.add = () => {
     // body('thumb', 'thumb is required').exists(),
 
     // body('images', 'images is required').exists(),
-    // dấu * là đại diện cho tất cả phần tử trong mảng
+    // with * sign represents all elements in the array
     // body('images[*].url', 'url is required').exists(),
     // body('images[*].desc', 'desc is required').exists(),
 

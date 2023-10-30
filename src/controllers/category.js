@@ -42,7 +42,6 @@ exports.deleteChecks = async (req, res) => {
 };
 
 exports.getAll = async (req, res) => {
-  // populate sẽ tham chiếu thuộc tính nằm trong table Category, và đó là thuộc tính categories
   const resDB = await Category.find().populate('brands');
   return res.status(200).json({
     status: 'SUCCESS',
@@ -51,7 +50,6 @@ exports.getAll = async (req, res) => {
 };
 
 exports.getOne = async (req, res) => {
-  // populate sẽ tham chiếu thuộc tính nằm trong table Category, và đó là thuộc tính categories
   const params = req.params;
   const resDB = await Category.findById(params.id).populate('brands');
   return res.status(200).json({

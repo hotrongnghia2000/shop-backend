@@ -13,7 +13,7 @@ module.exports = async (req, res, next) => {
         throw new MyError('token đã hết hạn');
       else throw new MyError('token không hợp lệ');
     }
-    // nếu token hợp lệ, gắn decoded vào req và chuyển đến mdw kết tiếp
+    // if token is valid, append decoded to req and move to next mdw
     req.user = decoded;
     next();
   });

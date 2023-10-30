@@ -3,19 +3,20 @@ const jwt = require('jsonwebtoken');
 const MyError = require('../class/HandleThrowErr');
 const User = require('../models/user');
 const utils = require('../utils');
-// lấy thông tin đăng ký
+
+// get registration information
 exports.register = async (req, res) => {
   const { email } = req.body;
 
-  // kiểm tra email có tồn tại trên hệ thống chưa ?
+  // check if email exists on the system?
   const isExistUser = await User.findOne({ email });
   if (isExistUser) throw new MyError('email đã được sử dụng', 400);
 
-  // gửi một mail đến email yêu cầu đăng ký
-  // tạo một code 4 số
+  // send an email to the registration request email
+  // create a 4-digit code
   const code = Math.floor(1000 + Math.random() * 9000);
-  // cookie này có thời hạn là 60s
-  // http-only đảm bảo chỉ có máy chủ mới được truy cập
+  // This cookie has a duration of 60 seconds
+  // http-only ensures only the server is accessed
   const cookieData = { ...req.body, code };
   await res.cookie('registrationData', cookieData, {
     httpOnly: true,
@@ -33,7 +34,7 @@ exports.register = async (req, res) => {
   });
 };
 
-// xác nhận email và hoàn thành đăng ký tài khoản
+// confirm email and complete account registration
 exports.finishRegistration = async (req, res) => {
   const cookieData = req.cookies.registrationData;
   if (!cookieData)
@@ -42,10 +43,10 @@ exports.finishRegistration = async (req, res) => {
       401
     );
   const { userCode } = req.body;
-  // remove code ra khỏi object, chỉ lấy thông tin user
+  // remove code from object, only get user information
   const { code, ...userData } = cookieData;
   userData.password = utils.hashString(userData.password);
-  // xác nhận mã của người dùng gửi lên server
+  // confirm the user's code sent to the server
   if (cookieData.code !== +userCode)
     throw new MyError('mã xác thực không đúng, vui lòng check lại email', 400);
   else {
@@ -57,19 +58,19 @@ exports.finishRegistration = async (req, res) => {
   }
 };
 
-// quên mật khẩu, lấy lại mật khẩu
+// forgot password, reset password
 exports.changePassword = async (req, res) => {
   const { email } = req.body;
 
-  // kiểm tra email có tồn tại trên hệ thống chưa ?
+  // check if email exists on the system?
   const isExistUser = await User.findOne({ email });
   if (!isExistUser) throw new MyError('email chưa được đăng ký trước đó', 400);
 
-  // gửi một mail đến email yêu cầu đăng ký
-  // tạo một code 4 số
+  // send an email to the registration request email
+  // create a 4-digit code
   const code = Math.floor(1000 + Math.random() * 9000);
-  // cookie này có thời hạn là 60s
-  // http-only đảm bảo chỉ có máy chủ mới được truy cập
+  // This cookie has a duration of 60 seconds
+  // http-only ensures only the server is accessed
   const cookieData = { ...req.body, code };
   await res.cookie('finishChangePassword', cookieData, {
     httpOnly: true,
@@ -87,7 +88,7 @@ exports.changePassword = async (req, res) => {
   });
 };
 
-// xác nhận email và hoàn thành thay đổi mật khẩu
+// confirm email and complete password change
 exports.finishChangePassword = async (req, res) => {
   const cookieData = req.cookies.finishChangePassword;
   if (!cookieData)
@@ -96,10 +97,10 @@ exports.finishChangePassword = async (req, res) => {
       401
     );
   const { userCode } = req.body;
-  // remove code ra khỏi object, chỉ lấy thông tin user
+  // remove code from object, only get user information
   const { code, ...userData } = cookieData;
   newPassword = utils.hashString(userData.password);
-  // xác nhận mã của người dùng gửi lên server
+  // confirm the user's code sent to the server
   if (cookieData.code !== +userCode)
     throw new MyError('mã xác thực không đúng, vui lòng check lại email', 400);
   else {
@@ -115,41 +116,41 @@ exports.finishChangePassword = async (req, res) => {
   }
 };
 
-// đăng nhập
-// dùng AT và RT để thay thế cho session, cookie
-// AT có thời hạn ngắn, tầm 5 phút (tùy), đại diện cho user đi lấy tài nguyên
-// RT có thời gian dài hơn, tầm 7 ngày(tùy), đại diện cho phiên đăng nhập
-// AT sau khi tạo sẽ được gửi về user, khi user gọi api phải gửi kèm AT
-// RT sẽ được lưu ở DB
-// theo đó, mỗi khi login, RT sẽ được update giá trị mới, đồng thời RT sẽ được lưu xuống cookie của user và tạo ra AT
-// khi AT hết hạn, user phải gọi API yêu cầu refresh AT, điều kiện là RT ở DB phải matched với AT ở user
-// khi RT hết hạn, user sẽ được đẩy về login để tiếp tục vòng lặp này
+// log in
+// Use AT and RT to replace sessions and cookies
+// AT has a short duration, about 5 minutes (depending), representing the user to get resources
+// RT has a longer time, about 7 days (depending), representing the login session
+// After creating AT, it will be sent to the user. When the user calls the api, AT must be sent with it
+// RT will be saved in DB
+// Accordingly, every time you log in, RT will be updated with a new value, and RT will be saved in the user's cookie and create AT
+// When AT expires, the user must call the API to request a refresh of AT, the condition is that the RT in the DB must match with the AT in the user
+// When RT expires, the user will be pushed back to login to continue this loop
 exports.login = async (req, res) => {
   const body = req.body;
   const user = await User.findOne({ email: body.email });
-  // kiểm tra email
+  // check email
   if (!user) throw new Error('email này chưa được đăng ký', 400);
-  // kiểm tra password
+  // check password
   if (user.password !== utils.hashString(body.password))
     throw new MyError('password không đúng', 400);
 
-  // tạo RT, update DB và lưu vào cookie của user
+  // create RT, update DB and save to user's cookie
   const refreshToken = jwt.sign({ _id: user._id }, process.env.JWT_KEY, {
-    expiresIn: '120s',
+    expiresIn: '60s',
   });
   await User.findByIdAndUpdate(user._id, { refreshToken }, { new: true });
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    maxAge: 120 * 1000,
+    maxAge: 60 * 1000,
   });
 
-  // tạo AT
+  // create AT
   const accessToken = jwt.sign({ _id: user._id }, process.env.JWT_KEY, {
     expiresIn: '5s',
   });
 
-  // loại bỏ password trước khi trả user data về client
-  // phải dùng thêm _doc
+  // remove password before returning user data to client
+  // must use _doc
   delete user._doc.password;
   delete user._doc.refreshToken;
 
@@ -161,11 +162,11 @@ exports.login = async (req, res) => {
   });
 };
 
-// cấp lại access token
+// re-issue access token
 exports.refreshToken = async (req, res) => {
   const cookies = req.cookies;
 
-  // giải mã token, token hết hạn là exception, nó sẽ dừng code và chuyển đến middleware kế
+  // decode the token, expired token is an exception, it will stop the code and move to the next middleware
   jwt.verify(cookies.refreshToken, process.env.JWT_KEY, (err) => {
     if (err) {
       if (err.name === 'TokenExpiredError')
@@ -173,13 +174,13 @@ exports.refreshToken = async (req, res) => {
       else throw new MyError('token không hợp lệ');
     }
   });
-  // kiểm tra refresh token có tồn tại trên db
+  // check if the refresh token exists on the database
   const user = await User.findOne({
     refreshToken: cookies.refreshToken,
   });
   if (!user) throw new MyError('refresh token không tồn tại trong DB', 401);
 
-  // tạo AT mới
+  // create new AT
   const accessToken = jwt.sign({ _id: user._id }, process.env.JWT_KEY, {
     expiresIn: '10s',
   });
@@ -229,7 +230,7 @@ exports.updateCart = async (req, res) => {
   if (!productId) throw new MyError('missing inputs');
 
   const user = await User.findById(_id);
-  // kiểm tra xem sản phẩm có trong cart hay chưa
+  // check if the product is in the cart or not
   const product = user.cart.find((el) => el.product.toString() === productId);
   if (!product) {
     const resDB = await User.findByIdAndUpdate(

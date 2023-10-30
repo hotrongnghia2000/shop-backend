@@ -1,6 +1,6 @@
-// sẽ có nhiều router khác nhau như user, product, category,.. ==> mỗi router sẽ cho vào 1 file
-// thay vì mỗi file tạo một function nhận tham số là app, ta sẽ dùng express.Router()
-// express.Router() là một middleware
+// there will be many different routers such as user, product, category,.. ==> each router will put in 1 file
+// instead of creating a function for each file that takes app as a parameter, we will use express.Router()
+// express.Router() is a middleware
 const user = require('./user');
 const category = require('./category');
 const brand = require('./brand');
@@ -8,7 +8,7 @@ const product = require('./product');
 
 const initRouters = (app) => {
   // routes
-  // mọi router bắt đầu bằng 'api/v1/user' sẽ chạy qua middleware user
+  // any router starting with 'api/v1/user' will run through the user middleware
   app.use('/api/user', user);
   app.use('/api/brand', brand);
   app.use('/api/category', category);

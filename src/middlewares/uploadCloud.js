@@ -11,15 +11,15 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   allowedFormats: ['jpg', 'png'],
-  // các api của cloudinary sẽ được dùng trong object params
+  // cloudinary's api will be used in object params
   params: {
     folder: 'shop',
   },
 });
 
-// có thể cấu hình thêm cho multer tại đây
-// cloudinary không có api giới hạn file
-// giới hạn qua multer sẽ tăng tốc độ thực thi
+// additional multer can be configured here
+// cloudinary does not have a file limit api
+// limit via multer will speed up execution
 module.exports = multer({
   storage,
   // limits: { fileSize: 100 * 1024 }
